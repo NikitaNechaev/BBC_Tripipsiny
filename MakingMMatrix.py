@@ -3,6 +3,8 @@ from Bio import SeqIO
 from tqdm import tqdm
 import pandas as pd
 
+# test comm
+
 #filename = 'BioBootCamp 2022, 2-ой этап\generated_sequence.fa'
 filename = 'BioBootCamp 2022, 2-ой этап\hg38_chr1_and_chr2.fa'
 #filename = 'myFasta.fa'
