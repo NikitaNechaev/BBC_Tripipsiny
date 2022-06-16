@@ -1,14 +1,12 @@
-from turtle import color
 from Bio import SeqIO
 import numpy as np, matplotlib.pyplot as plt
 from tqdm import tqdm
-import scipy.signal as ss
 
 np.set_printoptions(threshold=15000)
 
-#filename = 'BioBootCamp 2022, 2-ой этап\generated_sequence.fa'
+filename = 'SourceFiles\generated_sequence.fa'
 #filename = 'BioBootCamp 2022, 2-ой этап\hg38_chr1_and_chr2 copy.fa'
-filename = 'myFasta.fa'
+#filename = 'myFasta.fa'
 seq = SeqIO.parse(filename, 'fasta')
 for rec in seq:
     example = rec
@@ -65,8 +63,8 @@ CPG = np.array([[0.180, 0.274, 0.426, 0.120], [0.171, 0.368, 0.274, 0.188], [0.1
 
 dynAr = np.full((4,4),0.0) # динамическая матрица (МД)
 compAr = np.full((4,4), 0.0) # матрица сравнений (МС)
-NON_CPG_mult = NON_CPG*300
-CPG_mult = CPG*300
+# NON_CPG_mult = NON_CPG*300
+# CPG_mult = CPG*300
 
 x = []
 y = []

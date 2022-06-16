@@ -3,7 +3,7 @@ from re import A
 import matplotlib.pyplot as plt, numpy as np
 from Bio import SeqIO
 
-filename = 'BioBootCamp 2022, 2-ой этап\generated_sequence.fa'
+filename = 'SourceFiles\generated_sequence.fa'
 seq = SeqIO.parse(filename, 'fasta')
 for rec in seq:
     example = rec
