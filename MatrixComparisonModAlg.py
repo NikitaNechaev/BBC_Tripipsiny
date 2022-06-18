@@ -1,5 +1,4 @@
 from Bio import SeqIO
-from pandas import array
 from tqdm import tqdm
 import numpy as np, matplotlib.pyplot as plt
 
@@ -79,12 +78,12 @@ dyn_row = []
 dyn_row_coords = []
 islands_list = []
 
-
-
 for i in range(len(yCpG)-1):
-    if yCpG[i] > yNon[i]:
+    while yCpG[i] > yNon[i]:
         dyn_row.append(yCpG[i])
-
+        i+=1
+    
+    
 fig, ax = plt.subplots()
 ax.plot(yCpG)
 ax.plot(yNon)

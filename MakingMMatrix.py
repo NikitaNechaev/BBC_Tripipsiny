@@ -30,18 +30,18 @@ dict_nuc = {'A': {'A': 0,   'C': 0,    'G': 0,     'T': 0},
             'T': {'A': 0,   'C': 0,    'G': 0,     'T': 0},
             'N': {'N': 0}}
 
-dict_nuc_noncpg =  {'A': {'A': 0,   'C': 0,    'G': 0,     'T': 0},
-            'C': {'A': 0,   'C': 0,    'G': 0,     'T': 0},
-            'G': {'A': 0,   'C': 0,    'G': 0,     'T': 0},
-            'T': {'A': 0,   'C': 0,    'G': 0,     'T': 0},
-            'N': {'N': 0}}
+dict_nuc_noncpg =  {'A': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
+            'C': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
+            'G': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
+            'T': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
+            'N': {'N': 0, 'A': 0,   'C': 0,    'G': 0,     'T': 0}}
 
 for i in tqdm(range(len(islands_coords)-1)):  # считаем количество переходов побуквенно (кол-во AA, CG, ...)
     for j in range(islands_coords[i][0], islands_coords[i][1]):
         dict_nuc[example.seq[j].upper()][example.seq[j+1].upper()] += 1
     for k in range(islands_coords[i][1], islands_coords[i+1][0]):
-        if example.seq[k].upper() != 'N' and example.seq[k+1] != 'N':
-            dict_nuc_noncpg[example.seq[k].upper()][example.seq[k+1].upper()] += 1
+        #if example.seq[k].upper() != 'N' and example.seq[k+1].upper() != 'N':
+        dict_nuc_noncpg[example.seq[k].upper()][example.seq[k+1].upper()] += 1
 
     # уникальные случаи (от 0 до первого числа, 2 последних)   
 # for j1 in range(islands_coords[-1][0], islands_coords[-1][1]):
