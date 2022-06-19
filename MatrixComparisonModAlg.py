@@ -67,7 +67,7 @@ for i in tqdm(range(CPG_SIZE, len(example.seq)-1), leave=True): #scaner move (Cp
                 dict_nuc_noncpg[nucList[k]]['T'])
         for l in range(4):
             comparison[k][l] = (CPG[k][l] - (dict_nuc_cpg[nucList[k]][nucList[l]] / sum_of_row))**2
-            comparison_ncpg[k][l] = (NON_CPG[k][l] - (dict_nuc_noncpg[nucList[k]][nucList[l]] / sum_of_row))**2
+            comparison_ncpg[k][l] = (NON_CPG[k][l] - (dict_nuc_noncpg[nucList[k]][nucList[l]] / sum_of_row_ncgp))**2
     yCpG.append(-np.sum(comparison))
     yNon.append(-np.sum(comparison_ncpg))
 
