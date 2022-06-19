@@ -29,6 +29,7 @@ dict_nuc_noncpg =  {'A': {'A': 0,   'C': 0,    'G': 0,     'T': 0},
             'N': {'N': 0}}
 
 comparison = np.full((4,4), 0.0)
+comparison_ncpg = np.full((4,4), 0.0)
 
 x = np.linspace(0, len(example.seq), len(example.seq)) 
 yCpG = []
@@ -53,26 +54,22 @@ yNon.append(MatrixInit(dict_nuc_noncpg, 1))
 for i in tqdm(range(CPG_SIZE, len(example.seq)-1), leave=True): #scaner move (CpG comp)
     dict_nuc_cpg[example.seq[i-CPG_SIZE]][example.seq[i-CPG_SIZE+1]] -= 1
     dict_nuc_cpg[example.seq[i]][example.seq[i+1]] += 1
+    dict_nuc_noncpg[example.seq[i-CPG_SIZE]][example.seq[i-CPG_SIZE+1]] -= 1
+    dict_nuc_noncpg[example.seq[i]][example.seq[i+1]] += 1
     for k in range(4):
         sum_of_row = (dict_nuc_cpg[nucList[k]]['A'] + 
                 dict_nuc_cpg[nucList[k]]['C'] +
                 dict_nuc_cpg[nucList[k]]['G'] + 
                 dict_nuc_cpg[nucList[k]]['T'])
-        for l in range(4):
-            comparison[k][l] = (CPG[k][l] - (dict_nuc_cpg[nucList[k]][nucList[l]] / sum_of_row))**2
-    yCpG.append(-np.sum(comparison))
-
-for i in tqdm(range(CPG_SIZE, len(example.seq)-1)): #scaner move (CpG comp)
-    dict_nuc_noncpg[example.seq[i-CPG_SIZE]][example.seq[i-CPG_SIZE+1]] -= 1
-    dict_nuc_noncpg[example.seq[i]][example.seq[i+1]] += 1
-    for k in range(4):
-        sum_of_row = (dict_nuc_noncpg[nucList[k]]['A'] + 
+        sum_of_row_ncgp = (dict_nuc_noncpg[nucList[k]]['A'] + 
                 dict_nuc_noncpg[nucList[k]]['C'] +
                 dict_nuc_noncpg[nucList[k]]['G'] + 
                 dict_nuc_noncpg[nucList[k]]['T'])
         for l in range(4):
-            comparison[k][l] = (NON_CPG[k][l] - (dict_nuc_noncpg[nucList[k]][nucList[l]] / sum_of_row))**2
-    yNon.append(-np.sum(comparison))
+            comparison[k][l] = (CPG[k][l] - (dict_nuc_cpg[nucList[k]][nucList[l]] / sum_of_row))**2
+            comparison_ncpg[k][l] = (NON_CPG[k][l] - (dict_nuc_noncpg[nucList[k]][nucList[l]] / sum_of_row))**2
+    yCpG.append(-np.sum(comparison))
+    yNon.append(-np.sum(comparison_ncpg))
 
 dyn_row = []
 dyn_row_coords = []
@@ -82,8 +79,7 @@ for i in range(len(yCpG)-1):
     while yCpG[i] > yNon[i]:
         dyn_row.append(yCpG[i])
         i+=1
-    
-    
+
 fig, ax = plt.subplots()
 ax.plot(yCpG)
 ax.plot(yNon)
