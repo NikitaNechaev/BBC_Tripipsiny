@@ -15,10 +15,6 @@ for rec in seq:
 exel_data = pd.read_excel('SourceFiles\CleanCoords.xlsx')
 islands_coords = pd.DataFrame(exel_data).to_numpy()
 
-# образцовые целевые матрицы (generated_sequence) :
-NON_CPG = np.array([[0.300, 0.205, 0.285, 0.210], [0.322, 0.298, 0.078, 0.302], [0.248, 0.246, 0.298, 0.208], [0.177, 0.239, 0.292, 0.292]])
-CPG = np.array([[0.180, 0.274, 0.426, 0.120], [0.171, 0.368, 0.274, 0.188], [0.161, 0.339, 0.375, 0.125], [0.079, 0.355, 0.384, 0.182]])
-
 MIN_ISLAND_SIZE = 200
 COUNT_OF_NUC_IN_CPG = 1942557
 
@@ -44,12 +40,10 @@ for i in tqdm(range(len(islands_coords)-1)):  # считаем количест�
         dict_nuc_noncpg[example.seq[k].upper()][example.seq[k+1].upper()] += 1
 
     # уникальные случаи (от 0 до первого числа, 2 последних)   
-# for j1 in range(islands_coords[-1][0], islands_coords[-1][1]):
-#     dict_nuc[example.seq[j1].upper()][example.seq[j1+1].upper()] += 1
-# for j2 in range(islands_coords[0][0]):
-#     dict_nuc_noncpg[example.seq[j2].upper()][example.seq[j2+1].upper()] += 1
-# for j3 in range(islands_coords[-1][1], len(example.seq)):
-#     dict_nuc_noncpg[example.seq[j3].upper()][example.seq[j3+1].upper()] += 1
+for j1 in range(islands_coords[-1][0], islands_coords[-1][1]):
+    dict_nuc[example.seq[j1].upper()][example.seq[j1+1].upper()] += 1
+for j2 in range(islands_coords[0][0]):
+    dict_nuc_noncpg[example.seq[j2].upper()][example.seq[j2+1].upper()] += 1
 
 print(dict_nuc)
 print(dict_nuc_noncpg)

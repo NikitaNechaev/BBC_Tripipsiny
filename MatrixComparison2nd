@@ -4,6 +4,7 @@ import numpy as np, matplotlib.pyplot as plt
 
 filename = 'SourceFiles\hg38_chr1_and_chr2.fa'
 f = open('res.txt', 'w')
+f.write(f"Анализируется файл {filename}\n")
 
 seq = SeqIO.parse(filename, 'fasta')
 for rec in seq:
@@ -11,15 +12,15 @@ for rec in seq:
     break
 
 CPG_SIZE = 200
-NON_CPG = np.array([[0.3271715869912977, 0.17247792812534388, 0.24443043150683844, 0.25592005337651996], 
-                    [0.35167597953483576, 0.2579215677970476, 0.04602548647263419, 0.3443769661954824], 
-                    [0.289574541578388, 0.20886930435445236, 0.2581334737104361, 0.2434226803567235], 
-                    [0.21703463177331836, 0.20516397764376426, 0.24930069526755239, 0.328500695315365]])
+NON_CPG = np.array([[0.32716698441593656, 0.17248167002809267, 0.24443678155548018, 0.25591456400049056], 
+                    [0.3516689128695902, 0.2579304149667452, 0.046029645994422504, 0.34437102616924214], 
+                    [0.28956746321110677, 0.20887634532686009, 0.2581403123573799, 0.2434158791046533], 
+                    [0.21703089912397244, 0.2051678488685245, 0.24930659876773192, 0.3284946532397712]])
 
-CPG = np.array([[0.18833298467476906, 0.2733168226632566, 0.4261507419679189, 0.11219945069405549], 
-                [0.15741096046687694, 0.3645942754532538, 0.2875059448583827, 0.19048881922148653], 
-                [0.1619684499314129, 0.3519651696785352, 0.3647984135504264, 0.12126796683962546], 
-                [0.08710125011673982, 0.3666230837991808, 0.3666230837991808, 0.1904893733406268]])
+CPG = np.array([[0.18831755840546174, 0.27329978209686234, 0.42616928982466556, 0.11221336967301036], 
+                [0.15740548738943166, 0.36455117988944646, 0.2875502852707851, 0.19049304745033682], 
+                [0.1619506626548219, 0.35192909824399826, 0.36484986132906516, 0.1212703777721147], 
+                [0.08708915961511532, 0.3666073202771276, 0.35580160968746455, 0.19050191042029246]])
 #целевые матрицы (МЦ)
 
 nucList = ['A', 'C', 'G', 'T']
@@ -42,7 +43,9 @@ comparison_ncpg = np.full((4,4), 0.0)
 x = np.linspace(0, len(example.seq), len(example.seq)) 
 yCpG = []
 yNon = []
+yDif = []
 islands_list = []
+counter = 0
 
 def MatrixInit (def_matrix, iter_num:int):
     for j in range(CPG_SIZE): #заполнение матрицы CpG первыми 300 нукл.
@@ -83,12 +86,16 @@ for i in tqdm(range(CPG_SIZE, 200000), leave=True):
                 comparison_ncpg[k][l] = (NON_CPG[k][l] - (dict_nuc_noncpg[nucList[k].upper()][nucList[l].upper()] / sum_of_row_ncgp))**2
     yCpG.append(-np.sum(comparison))
     yNon.append(-np.sum(comparison_ncpg))
+    yDif.append(-np.sum(comparison_ncpg)+np.sum(comparison))
     if yCpG[i-1-CPG_SIZE] > yNon[i-1-CPG_SIZE]:
         islands_list.append(i-1-CPG_SIZE)
-    elif yCpG[i-1-CPG_SIZE] > yNon[i-1-CPG_SIZE] and yCpG[i-CPG_SIZE] < yNon[i-CPG_SIZE]:
-        f.write(islands_list[int(CPG_SIZE/2)], '\t', islands_list[:(int(CPG_SIZE/2))], '\n')
-    
+        if yCpG[i-CPG_SIZE] < yNon[i-CPG_SIZE] and len(islands_list) >= CPG_SIZE:
+           f.write(f"{islands_list[int(CPG_SIZE/2)]} \t {islands_list[-int(CPG_SIZE/2)]} \n")
+           islands_list.clear()
+
+f.close()
 fig, ax = plt.subplots()
 ax.plot(yCpG)
 ax.plot(yNon)
+ax.plot(yDif)
 plt.show()
