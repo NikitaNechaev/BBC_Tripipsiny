@@ -1,10 +1,11 @@
+import math
 from Bio import SeqIO
 from tqdm import tqdm
 import numpy as np, matplotlib.pyplot as plt
 
 filename = 'SourceFiles\hg38_chr1_and_chr2.fa'
 f = open('res.txt', 'w')
-f.write(f"Анализируется файл {filename}\n")
+f.write(f"Loaded file - {filename}\n")
 
 seq = SeqIO.parse(filename, 'fasta')
 for rec in seq:
@@ -43,7 +44,7 @@ comparison_ncpg = np.full((4,4), 0.0)
 x = np.linspace(0, len(example.seq), len(example.seq)) 
 yCpG = []
 yNon = []
-yDif = []
+yAdd = []
 islands_list = []
 counter = 0
 
@@ -63,9 +64,30 @@ def MatrixInit (def_matrix, iter_num:int):
 
 yCpG.append(MatrixInit(dict_nuc_cpg, 1))
 yNon.append(MatrixInit(dict_nuc_noncpg, 1))
+for i in range(CPG_SIZE):
+    yAdd.append(0.01)
+
+def CatchIsland (coord, data, param):
+    coord_add = coord
+    value = data[coord]
+    
+    if param == 1:
+        value = data[coord]
+        while value < 0:
+            value = data[coord_add]
+            coord_add -= 1
+    
+    if param == 2:
+        while value < 0:
+            value = data[coord_add]
+            if coord_add+1 == len(data):
+                break
+            else:
+                coord_add += 1
+    return coord_add
 
 # for i in tqdm(range(CPG_SIZE, len(example.seq)-1), leave=True): #scaner move (CpG comp)
-for i in tqdm(range(CPG_SIZE, 200000), leave=True):
+for i in tqdm(range(CPG_SIZE, 1000000), leave=True):
     dict_nuc_cpg[example.seq[i-CPG_SIZE].upper()][example.seq[i-CPG_SIZE+1].upper()] -= 1
     dict_nuc_cpg[example.seq[i].upper()][example.seq[i+1].upper()] += 1
     dict_nuc_noncpg[example.seq[i-CPG_SIZE].upper()][example.seq[i-CPG_SIZE+1].upper()] -= 1
@@ -86,16 +108,24 @@ for i in tqdm(range(CPG_SIZE, 200000), leave=True):
                 comparison_ncpg[k][l] = (NON_CPG[k][l] - (dict_nuc_noncpg[nucList[k].upper()][nucList[l].upper()] / sum_of_row_ncgp))**2
     yCpG.append(-np.sum(comparison))
     yNon.append(-np.sum(comparison_ncpg))
-    yDif.append(-np.sum(comparison_ncpg)+np.sum(comparison))
-    if yCpG[i-1-CPG_SIZE] > yNon[i-1-CPG_SIZE]:
-        islands_list.append(i-1-CPG_SIZE)
-        if yCpG[i-CPG_SIZE] < yNon[i-CPG_SIZE] and len(islands_list) >= CPG_SIZE:
-           f.write(f"{islands_list[int(CPG_SIZE/2)]} \t {islands_list[-int(CPG_SIZE/2)]} \n")
-           islands_list.clear()
+    yAdd.append(1/CPG_SIZE*math.log(np.sum(comparison)/np.sum(comparison_ncpg)))
+            # islands_list.append(i-1-CPG_SIZE)
+            # if yAdd[i] > -0.01 and len(islands_list) >= CPG_SIZE:
+            #     f.write(f"{islands_list[int(CPG_SIZE*1.5)]} \t {islands_list[-int(CPG_SIZE/2)]} \n")
+            #     islands_list.clear()
+
+last_call = 2*CPG_SIZE
+
+for i in range(1, len(yAdd)):
+    if yAdd[i-1] < -0.01:
+        if i - last_call >= CPG_SIZE:
+            f.write(f"{int(CatchIsland(i-1, yAdd, 1) - CPG_SIZE*0.55)} \t {int(CatchIsland(i-1, yAdd, 2) - CPG_SIZE*1.05)} \n")
+            last_call = i
 
 f.close()
 fig, ax = plt.subplots()
-ax.plot(yCpG)
-ax.plot(yNon)
-ax.plot(yDif)
+# ax.plot(yCpG)
+# ax.plot(yNon)
+ax.plot(yAdd)
+ax.plot(np.full(len(yAdd), -0.01), color = 'gray')
 plt.show()
