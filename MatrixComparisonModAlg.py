@@ -1,7 +1,7 @@
 # Импорт необходимых библиотек:
 from Bio import SeqIO
 from tqdm import tqdm
-import numpy as np, matplotlib.pyplot as plt
+import numpy as np, matplotlib.pyplot as plt, math
 
 # Инициализация файлов, открытие/создание выходного файла
 filename = 'SourceFiles\generated_sequence.fa'
@@ -49,6 +49,7 @@ comparison_ncpg = np.full((4,4), 0.0)
 x = np.linspace(0, len(example.seq), len(example.seq)) 
 yCpG = []
 yNon = []
+yAdd = []
 islands_list = []
 res = [[]]
 
@@ -64,7 +65,7 @@ def MatrixInit (def_matrix, iter_num:int):
                     def_matrix[nucList[k]]['T'])
         for l in range(4):
             comparison[k][l] = (CPG[k][l] - (def_matrix[nucList[k]][nucList[l]] / sum_of_row))**2
-    return(-np.sum(comparison))
+    return(np.sum(comparison))
 
 yCpG.append(MatrixInit(dict_nuc_cpg, 1))
 yNon.append(MatrixInit(dict_nuc_noncpg, 1))
@@ -90,15 +91,19 @@ for i in tqdm(range(CPG_SIZE, len(example.seq)-1), leave=True):
             comparison[k][l] = (CPG[k][l] - (dict_nuc_cpg[nucList[k]][nucList[l]] / sum_of_row))**2 # добавляем в матрицу comparison информацию о различии константной матрицы и полученной матрицы
                 # показатель разности матриц - сумма всех элементов матрицы, каждая клетка которой - квадрат разности константной вероятности конкретного перехода и полученной на участке сканера вероятности перехода
             comparison_ncpg[k][l] = (NON_CPG[k][l] - (dict_nuc_noncpg[nucList[k]][nucList[l]] / sum_of_row_ncgp))**2
-    yCpG.append(np.sum(comparison)) # Добавляем полученные данные в массив с данными для графика
-    yNon.append(np.sum(comparison_ncpg))
+    yCpG.append(1/np.sum(comparison)) # Добавляем полученные данные в массив с данными для графика
+    yNon.append(1/np.sum(comparison_ncpg))
+    yAdd.append(1/CPG_SIZE*math.log(np.sum(comparison)/np.sum(comparison_ncpg)))
+    line = 0 # счет
     if yCpG[i-1-CPG_SIZE] > yNon[i-1-CPG_SIZE]: # Производится запись данных о полученных координатах в выходной файл
         islands_list.append(i-1-CPG_SIZE)
     elif yCpG[i-1-CPG_SIZE] > yNon[i-1-CPG_SIZE] and yCpG[i-CPG_SIZE] < yNon[i-CPG_SIZE]:
         f.write(islands_list[int(CPG_SIZE/2)], '\t', islands_list[:(int(CPG_SIZE/2))], '\n')
+        line += 1
 
+f.close
 fig, ax = plt.subplots() # Создание и вывод графика
-ax.plot(yCpG)
-ax.plot(yNon)
+#ax.plot(yCpG)
+#ax.plot(yNon)
+ax.plot(yAdd)
 plt.show()
-f.close()

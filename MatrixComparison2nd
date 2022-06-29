@@ -22,7 +22,6 @@ CPG = np.array([[0.18831755840546174, 0.27329978209686234, 0.42616928982466556, 
                 [0.15740548738943166, 0.36455117988944646, 0.2875502852707851, 0.19049304745033682], 
                 [0.1619506626548219, 0.35192909824399826, 0.36484986132906516, 0.1212703777721147], 
                 [0.08708915961511532, 0.3666073202771276, 0.35580160968746455, 0.19050191042029246]])
-#целевые матрицы (МЦ)
 
 nucList = ['A', 'C', 'G', 'T']
 
@@ -86,8 +85,8 @@ def CatchIsland (coord, data, param):
                 coord_add += 1
     return coord_add
 
-# for i in tqdm(range(CPG_SIZE, len(example.seq)-1), leave=True): #scaner move (CpG comp)
-for i in tqdm(range(CPG_SIZE, 1000000), leave=True):
+for i in tqdm(range(CPG_SIZE, len(example.seq)-1), leave=True): #scaner move (CpG comp)
+# for i in tqdm(range(CPG_SIZE, 1000000), leave=True):
     dict_nuc_cpg[example.seq[i-CPG_SIZE].upper()][example.seq[i-CPG_SIZE+1].upper()] -= 1
     dict_nuc_cpg[example.seq[i].upper()][example.seq[i+1].upper()] += 1
     dict_nuc_noncpg[example.seq[i-CPG_SIZE].upper()][example.seq[i-CPG_SIZE+1].upper()] -= 1
@@ -109,23 +108,20 @@ for i in tqdm(range(CPG_SIZE, 1000000), leave=True):
     yCpG.append(-np.sum(comparison))
     yNon.append(-np.sum(comparison_ncpg))
     yAdd.append(1/CPG_SIZE*math.log(np.sum(comparison)/np.sum(comparison_ncpg)))
-            # islands_list.append(i-1-CPG_SIZE)
-            # if yAdd[i] > -0.01 and len(islands_list) >= CPG_SIZE:
-            #     f.write(f"{islands_list[int(CPG_SIZE*1.5)]} \t {islands_list[-int(CPG_SIZE/2)]} \n")
-            #     islands_list.clear()
 
 last_call = 2*CPG_SIZE
+last_write = ""
 
 for i in range(1, len(yAdd)):
-    if yAdd[i-1] < -0.01:
-        if i - last_call >= CPG_SIZE:
-            f.write(f"{int(CatchIsland(i-1, yAdd, 1) - CPG_SIZE*0.55)} \t {int(CatchIsland(i-1, yAdd, 2) - CPG_SIZE*1.05)} \n")
+    if yAdd[i-1] < -0.01 and i - last_call >= CPG_SIZE:
+        now_write = f"{int(CatchIsland(i-1, yAdd, 1) - CPG_SIZE)} \t {int(CatchIsland(i-1, yAdd, 2) - CPG_SIZE)} \n"
+        if last_write != now_write:
+            f.write(f"{int(CatchIsland(i-1, yAdd, 1) - CPG_SIZE)} \t {int(CatchIsland(i-1, yAdd, 2) - CPG_SIZE)} \n")
+            last_write = f"{int(CatchIsland(i-1, yAdd, 1) - CPG_SIZE)} \t {int(CatchIsland(i-1, yAdd, 2) - CPG_SIZE)} \n"
             last_call = i
 
 f.close()
 fig, ax = plt.subplots()
-# ax.plot(yCpG)
-# ax.plot(yNon)
 ax.plot(yAdd)
 ax.plot(np.full(len(yAdd), -0.01), color = 'gray')
 plt.show()
