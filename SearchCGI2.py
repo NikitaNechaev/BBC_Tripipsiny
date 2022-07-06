@@ -3,7 +3,7 @@ from Bio import SeqIO
 from tqdm import tqdm
 import numpy as np, matplotlib.pyplot as plt
 
-filename = 'SourceFiles\hg38_chr1_and_chr2.fa'
+filename = 'SourceFiles\hg38_chr1_and_chr2 copy.fa'
 f = open('res.txt', 'w')
 f.write(f"Loaded file - {filename}\n")
 
@@ -12,6 +12,7 @@ for rec in seq:
     example = rec
     break
 
+triggeer_point = 6
 CPG_SIZE = 200
 NON_CPG = np.array([[0.32716698441593656, 0.17248167002809267, 0.24443678155548018, 0.25591456400049056], 
                     [0.3516689128695902, 0.2579304149667452, 0.046029645994422504, 0.34437102616924214], 
@@ -31,7 +32,7 @@ dict_nuc_cpg = {'A': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
             'T': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
             'N': {'N': 0, 'A': 0,   'C': 0,    'G': 0,     'T': 0}}
 
-dict_nuc_noncpg =  {'A': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
+dict_nuc_ncpg =  {'A': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
             'C': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
             'G': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
             'T': {'A': 0,   'C': 0,    'G': 0,     'T': 0, 'N':0},
@@ -62,7 +63,7 @@ def MatrixInit (def_matrix, iter_num:int):
     return(-np.sum(comparison))
 
 yCpG.append(MatrixInit(dict_nuc_cpg, 1))
-yNon.append(MatrixInit(dict_nuc_noncpg, 1))
+yNon.append(MatrixInit(dict_nuc_ncpg, 1))
 for i in range(CPG_SIZE):
     yAdd.append(0.01)
 
@@ -72,56 +73,72 @@ def CatchIsland (coord, data, param):
     
     if param == 1:
         value = data[coord]
-        while value < 0:
+        while value > 0:
             value = data[coord_add]
             coord_add -= 1
     
     if param == 2:
-        while value < 0:
+        while value > 0:
             value = data[coord_add]
             if coord_add+1 == len(data):
                 break
             else:
                 coord_add += 1
-    return coord_add
 
-for i in tqdm(range(CPG_SIZE, len(example.seq)-1), leave=True): #scaner move (CpG comp)
-# for i in tqdm(range(CPG_SIZE, 1000000), leave=True):
-    dict_nuc_cpg[example.seq[i-CPG_SIZE].upper()][example.seq[i-CPG_SIZE+1].upper()] -= 1
-    dict_nuc_cpg[example.seq[i].upper()][example.seq[i+1].upper()] += 1
-    dict_nuc_noncpg[example.seq[i-CPG_SIZE].upper()][example.seq[i-CPG_SIZE+1].upper()] -= 1
-    dict_nuc_noncpg[example.seq[i].upper()][example.seq[i+1].upper()] += 1
-    for k in range(4):
-        sum_of_row = (dict_nuc_cpg[nucList[k]]['A'] + 
-                dict_nuc_cpg[nucList[k]]['C'] +
-                dict_nuc_cpg[nucList[k]]['G'] + 
-                dict_nuc_cpg[nucList[k]]['T'])
-        sum_of_row_ncgp = (dict_nuc_noncpg[nucList[k]]['A'] + 
-                dict_nuc_noncpg[nucList[k]]['C'] +
-                dict_nuc_noncpg[nucList[k]]['G'] + 
-                dict_nuc_noncpg[nucList[k]]['T'])
-        for l in range(4):
-            if sum_of_row != 0:
-                comparison[k][l] = (CPG[k][l] - (dict_nuc_cpg[nucList[k].upper()][nucList[l].upper()] / sum_of_row))**2
-            if sum_of_row_ncgp != 0:
-                comparison_ncpg[k][l] = (NON_CPG[k][l] - (dict_nuc_noncpg[nucList[k].upper()][nucList[l].upper()] / sum_of_row_ncgp))**2
-    yCpG.append(-np.sum(comparison))
-    yNon.append(-np.sum(comparison_ncpg))
-    yAdd.append(1/CPG_SIZE*math.log(np.sum(comparison)/np.sum(comparison_ncpg)))
+    return coord_add - CPG_SIZE
+
+n2i = {'A':0, 'C':1, 'G':2, 'T':3, 'N':4}
+
+def NucToIdx(nuc):
+    return n2i[nuc]
+
+prob_cpg = 1
+prob_ncpg = 1
+
+for step in range(CPG_SIZE):
+    if(example.seq[step].upper() != 'N' and example[step + 1].upper() != 'N'):
+        prob_cpg_cur = CPG[NucToIdx(example.seq[step].upper())][NucToIdx(example.seq[step + 1].upper())] * 10
+        prob_ncpg_cur = NON_CPG[NucToIdx(example.seq[step].upper())][NucToIdx(example.seq[step + 1].upper())] * 10
+        prob_cpg *= prob_cpg_cur
+        prob_ncpg *= prob_ncpg_cur  
+
+
+#for i in tqdm(range(CPG_SIZE, len(example.seq)-1), leave=True): #scaner move (CpG comp)
+for i in tqdm(range(10000000, 10100000), leave=True):
+    if(example.seq[i - CPG_SIZE].upper() != 'N' and example[i - CPG_SIZE + 1].upper() != 'N'):
+        prob_cpg_cur = CPG[NucToIdx(example.seq[i - CPG_SIZE].upper())][NucToIdx(example.seq[i - CPG_SIZE + 1].upper())] * 10
+        prob_ncpg_cur = NON_CPG[NucToIdx(example.seq[i - CPG_SIZE].upper())][NucToIdx(example.seq[i - CPG_SIZE + 1].upper())] * 10
+        prob_cpg /= prob_cpg_cur
+        prob_ncpg /= prob_ncpg_cur 
+    if(example.seq[i].upper() != 'N' and example[i + 1].upper() != 'N'):
+        prob_cpg_cur = CPG[NucToIdx(example.seq[i].upper())][NucToIdx(example.seq[i + 1].upper())] * 10
+        prob_ncpg_cur = NON_CPG[NucToIdx(example.seq[i].upper())][NucToIdx(example.seq[i + 1].upper())] * 10
+        prob_cpg *= prob_cpg_cur
+        prob_ncpg *= prob_ncpg_cur  
+
+    yAdd.append(math.log(prob_cpg/prob_ncpg))
 
 last_call = 2*CPG_SIZE
 last_write = ""
 
+# normalize
+top_peak = max(yAdd)
+for i in range(len(yAdd)):
+    yAdd[i] /= top_peak/10
+
+triggeer_point = max(yAdd) - np.mean(yAdd)*1.5
+print(triggeer_point)
+
 for i in range(1, len(yAdd)):
-    if yAdd[i-1] < -0.01 and i - last_call >= CPG_SIZE:
-        now_write = f"{int(CatchIsland(i-1, yAdd, 1) - CPG_SIZE)} \t {int(CatchIsland(i-1, yAdd, 2) - CPG_SIZE)} \n"
+    if yAdd[i-1] > triggeer_point and i - last_call >= CPG_SIZE:
+        now_write = f"{int(CatchIsland(i-1, yAdd, 1))} \t {int(CatchIsland(i-1, yAdd, 2))} \n"
         if last_write != now_write:
-            f.write(f"{int(CatchIsland(i-1, yAdd, 1) - CPG_SIZE)} \t {int(CatchIsland(i-1, yAdd, 2) - CPG_SIZE)} \n")
-            last_write = f"{int(CatchIsland(i-1, yAdd, 1) - CPG_SIZE)} \t {int(CatchIsland(i-1, yAdd, 2) - CPG_SIZE)} \n"
+            f.write(f"{int(CatchIsland(i-1, yAdd, 1))} \t {int(CatchIsland(i-1, yAdd, 2))} \n")
+            last_write = f"{int(CatchIsland(i-1, yAdd, 1))} \t {int(CatchIsland(i-1, yAdd, 2))} \n"
             last_call = i
 
 f.close()
 fig, ax = plt.subplots()
 ax.plot(yAdd)
-ax.plot(np.full(len(yAdd), -0.01), color = 'gray')
+ax.plot(np.full(len(yAdd), triggeer_point), color = 'gray')
 plt.show()
