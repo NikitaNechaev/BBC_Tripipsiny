@@ -2,6 +2,7 @@ import math
 from Bio import SeqIO
 from tqdm import tqdm
 import numpy as np, matplotlib.pyplot as plt
+#test commit
 
 filename = 'SourceFiles\hg38_chr1_and_chr2 copy.fa'
 f = open('res.txt', 'w')
